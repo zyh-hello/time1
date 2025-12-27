@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八段码透明桌面时钟 - 带背景图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            color: #000;
+            position: relative;
+        }
+        
+        /* 背景图片容器 */
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        #background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 半透明遮罩层，使时钟在复杂背景上更清晰 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1); /* 轻微白色遮罩 */
+            z-index: -1;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .clock-container {
+            text-align: center;
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .clock-container:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+        
+        .text-container {
+            width: 200px;
+            padding: 25px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .text-container:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+        
+        .time {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .digit-container {
+            display: inline-block;
+            margin: 0 5px;
+        }
+        
+        .digit {
+            position: relative;
+            width: 50px;
+            height: 90px;
+            margin: 0 2px;
+            display: inline-block;
+        }
+        
+        .segment {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0);
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .segment.active {
+            background-color: #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0);
+        }
+        
+        /* 八段码布局 */
+        .a { top: 5px; left: 10px; width: 30px; height: 5px; }
+        .b { top: 10px; left: 40px; width: 5px; height: 35px; }
+        .c { top: 50px; left: 40px; width: 5px; height: 35px; }
+        .d { top: 85px; left: 10px; width: 30px; height: 5px; }
+        .e { top: 50px; left: 5px; width: 5px; height: 35px; }
+        .f { top: 10px; left: 5px; width: 5px; height: 35px; }
+        .g { top: 45px; left: 10px; width: 30px; height: 5px; }
+        
+        .colon {
+            font-size: 40px;
+            margin: 0 10px;
+            color: #000;
+            line-height: 90px;
+            opacity: 0.7;
+        }
+        
+        .date {
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.8;
+            color: #000;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+        }
+        
+        .text-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #000;
+            opacity: 0.8;
+        }
+        
+        .text-content {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #000;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .text-container {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .digit {
+                width: 35px;
+                height: 65px;
+            }
+            
+            .a { top: 4px; left: 7px; width: 21px; height: 4px; }
+            .b { top: 7px; left: 28px; width: 4px; height: 25px; }
+            .c { top: 37px; left: 28px; width: 4px; height: 25px; }
+            .d { top: 62px; left: 7px; width: 21px; height: 4px; }
+            .e { top: 37px; left: 3px; width: 4px; height: 25px; }
+            .f { top: 7px; left: 3px; width: 4px; height: 25px; }
+            .g { top: 33px; left: 7px; width: 21px; height: 4px; }
+            
+            .colon {
+                font-size: 30px;
+                line-height: 65px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .digit {
+                width: 25px;
+                height: 45px;
+            }
+            
+            .a { top: 3px; left: 5px; width: 15px; height: 3px; }
+            .b { top: 5px; left: 20px; width: 3px; height: 17px; }
+            .c { top: 25px; left: 20px; width: 3px; height: 17px; }
+            .d { top: 42px; left: 5px; width: 15px; height: 3px; }
+            .e { top: 25px; left: 2px; width: 3px; height: 17px; }
+            .f { top: 5px; left: 2px; width: 3px; height: 17px; }
+            .g { top: 23px; left: 5px; width: 15px; height: 3px; }
+            
+            .colon {
+                font-size: 20px;
+                line-height: 45px;
+            }
+            
+            .date {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景图片容器 -->
+    <div id="background-container">
+        <img id="background-image" src="my-background.jpg" alt="背景图片">
+    </div>
+    
+    <div class="container">
+        <div class="clock-container">
+            <div class="time">
+                <!-- 小时 -->
+                <div class="digit-container">
+                    <div class="digit" id="hour-tens">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                    <div class="digit" id="hour-ones">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                </div>
+                
+                <div class="colon">:</div>
+                
+                <!-- 分钟 -->
+                <div class="digit-container">
+                    <div class="digit" id="minute-tens">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                    <div class="digit" id="minute-ones">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                </div>
+                
+                <div class="colon">:</div>
+                
+                <!-- 秒 -->
+                <div class="digit-container">
+                    <div class="digit" id="second-tens">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                    <div class="digit" id="second-ones">
+                        <div class="segment a"></div>
+                        <div class="segment b"></div>
+                        <div class="segment c"></div>
+                        <div class="segment d"></div>
+                        <div class="segment e"></div>
+                        <div class="segment f"></div>
+                        <div class="segment g"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="date" id="date">2023年1月1日 星期一</div>
+        </div>
+        
+        <div class="text-container">
+            <div class="text-title">笔记</div>
+            <div class="text-content" id="text-content">
+<!-- 在这里编辑您的文字内容 -->
+Made by ZYH
+version 2.0
+-----------
+(Ilove study!)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 八段码数字映射 (a-g段)
+        const digitMap = {
+            '0': ['a', 'b', 'c', 'd', 'e', 'f'],
+            '1': ['b', 'c'],
+            '2': ['a', 'b', 'g', 'e', 'd'],
+            '3': ['a', 'b', 'g', 'c', 'd'],
+            '4': ['f', 'g', 'b', 'c'],
+            '5': ['a', 'f', 'g', 'c', 'd'],
+            '6': ['a', 'f', 'g', 'c', 'd', 'e'],
+            '7': ['a', 'b', 'c'],
+            '8': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+            '9': ['a', 'b', 'c', 'd', 'f', 'g']
+        };
+        
+        function updateDigit(digitElement, number) {
+            // 重置所有段
+            const segments = digitElement.querySelectorAll('.segment');
+            segments.forEach(segment => {
+                segment.classList.remove('active');
+            });
+            
+            // 激活对应数字的段
+            if (digitMap[number]) {
+                digitMap[number].forEach(segmentClass => {
+                    digitElement.querySelector(`.${segmentClass}`).classList.add('active');
+                });
+            }
+        }
+        
+        function updateClock() {
+            const now = new Date();
+            
+            // 获取时间各部分
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            // 更新八段码显示
+            updateDigit(document.getElementById('hour-tens'), hours[0]);
+            updateDigit(document.getElementById('hour-ones'), hours[1]);
+            updateDigit(document.getElementById('minute-tens'), minutes[0]);
+            updateDigit(document.getElementById('minute-ones'), minutes[1]);
+            updateDigit(document.getElementById('second-tens'), seconds[0]);
+            updateDigit(document.getElementById('second-ones'), seconds[1]);
+            
+            // 更新日期
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[now.getDay()];
+            
+            document.getElementById('date').textContent = `${year}年${month}月${day}日 星期${weekday}`;
+        }
+        
+        // 初始加载
+        updateClock();
+        
+        // 每秒更新
+        setInterval(updateClock, 1000);
+        
+        // 添加背景图片上传功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建一个隐藏的文件输入元素
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+            
+            // 添加双击时钟更换背景的功能
+            document.querySelector('.clock-container').addEventListener('dblclick', function() {
+                fileInput.click();
+            });
+            
+            // 处理文件选择
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('background-image').src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
